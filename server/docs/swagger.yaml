@@ -1,0 +1,265 @@
+openapi: 3.0.0
+info:
+  title: API Documentation
+  description: API cho hệ thống IOT Smart Home
+  version: 1.0.0
+servers:
+  - url: http://localhost:5001
+tags:
+  - name: Action History
+    description: Lịch sử thao tác thiết bị
+  - name: Data Sensor 
+    description: Dữ liệu cảm biến
+  - name: DashBoard
+    description: Lấy dữ liệu dashboard
+
+paths:
+  /api/action_history:
+    get:
+      tags:
+        - Action History
+      description: Lịch sử thao tác thiết bị
+      parameters:
+        - name: page
+          in: query
+          description: số thứ tự trang
+          required: false
+          schema:
+            type: string
+        - name: pageSize
+          in: query
+          description: kích thước trang
+          required: false
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: điều kiện sắp xếp (JSON format, ví dụ: {"field": "name", "sort": "asc"})
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: từ khóa tìm kiếm
+          required: false
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: Lịch sử điều khiển thiết bị được trả về
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  thietbi:
+                    type: array
+                    description: lịch sử điều khiển thiết bị
+                    items:
+                      type: object
+                      properties:
+                        MaThietBi:
+                          type: integer
+                          description: ID của dữ liệu lịch sử
+                        TenThietBi:
+                          type: string
+                          description: Tên của thiết bị
+                        TrangThai:
+                          type: string
+                          description: Trạng thái của thiết bị
+                        ThoiGian:
+                          type: string
+                          description: Thời gian thao tác
+                  total:
+                    type: integer
+                    description: số lượng dữ liệu trả về
+                example:
+                  thietbi:
+                    - MaThietBi: 25
+                      TenThietBi: "den"
+                      TrangThai: "1"
+                      ThoiGian: "2024-09-30T14:46:55.000Z"
+                    - MaThietBi: 20
+                      TenThietBi: "quat"
+                      TrangThai: "0"
+                      ThoiGian: "2024-09-29T14:46:55.000Z"
+                  total: 2
+        404:
+          description: Lỗi
+  /api/remote:
+    post:
+      tags:
+        - Remote
+      description: Điều khiển thiết bị
+      requestBody:
+        description: topic, message
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                topic:
+                  type: string
+                  description: topic của thiết bị
+                message:
+                  type: string
+                  description: bật/tắt
+      responses:
+        200:
+          description: Gửi yêu cầu thành công
+        404:
+          description: Lỗi
+
+  /api/data_sensor:
+    get:
+      tags:
+        - Data Sensor
+      description: Dữ liệu thu được từ cảm biến
+      parameters:
+        - name: page
+          in: query
+          description: số thứ tự trang
+          required: false
+          schema:
+            type: string
+        - name: pageSize
+          in: query
+          description: kích thước trang
+          required: false
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: điều kiện sắp xếp (JSON format, ví dụ: {"field": "name", "sort": "asc"})
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: từ khóa tìm kiếm
+          required: false
+          schema:
+            type: string
+        - name: field
+          in: query
+          description: trường tìm kiếm
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Dữ liệu cảm biến đã thu được
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cambien:
+                    type: array
+                    description: dữ liệu cảm biến
+                    items:
+                      type: object
+                      properties:
+                        MaCamBien:
+                          type: integer
+                          description: ID của dữ liệu cảm biến
+                        NhietDo:
+                          type: float
+                          description: Giá trị nhiệt độ
+                        DoAm:
+                          type: float
+                          description: Giá trị độ ẩm
+                        AnhSang:
+                          type: float
+                          description: Giá trị ánh sáng
+                        ThoiGian:
+                          type: string
+                          description: Thời gian thu được dữ liệu
+                  total:
+                    type: integer
+                    description: số lượng dữ liệu trả về
+                example:
+                  thietbi:
+                    - MaCamBien: 1254
+                      NhietDo: 29
+                      DoAm: 70
+                      AnhSang: 1000
+                      ThoiGian: "2024-09-30T14:46:55.000Z"
+                    - MaCamBien: 1255
+                      NhietDo: 29.2
+                      DoAm: 70
+                      AnhSang: 1033
+                      ThoiGian: "2024-09-30T14:46:58.000Z"
+                  total: 2
+        404:
+          description: Lỗi
+
+  /api/dashboard:
+    get:
+      tags:
+        - DashBoard
+      description: Lấy dữ liệu cho dashboard
+      responses:
+        200:
+          description: Dữ liệu dashboard được trả về
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  temper:
+                    type: array
+                    description: dữ liệu nhiệt độ
+                    items:
+                      type: object
+                      properties:
+                        NhietDo:
+                          type: float
+                          description: Giá trị nhiệt độ
+                        ThoiGian:
+                          type: string
+                          description: Thời gian thu được dữ liệu
+                  humid:
+                    type: array
+                    description: dữ liệu độ ẩm
+                    items:
+                      type: object
+                      properties:
+                        DoAm:
+                          type: float
+                          description: Giá trị độ ẩm
+                        ThoiGian:
+                          type: string
+                          description: Thời gian thu được dữ liệu
+                  light:
+                    type: array
+                    description: dữ liệu ánh sáng
+                    items:
+                      type: object
+                      properties:
+                        AnhSang:
+                          type: float
+                          description: Giá trị ánh sáng
+                        ThoiGian:
+                          type: string
+                          description: Thời gian thu được dữ liệu
+                example:
+                  temper:
+                    - NhietDo: 29
+                      ThoiGian: "2024-09-30T14:46:55.000Z"
+                    - NhietDo: 29.2
+                      ThoiGian: "2024-09-30T14:46:58.000Z"
+                  humid:
+                    - DoAm: 70
+                      ThoiGian: "2024-09-30T14:46:55.000Z"
+                    - DoAm: 70
+                      ThoiGian: "2024-09-30T14:46:58.000Z"
+                  light:
+                    - AnhSang: 1000
+                      ThoiGian: "2024-09-30T14:46:55.000Z"
+                    - AnhSang: 1033
+                      ThoiGian: "2024-09-30T14:46:58.000Z"           
+        404:
+          description: Lỗi
