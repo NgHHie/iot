@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Box, IconButton, useTheme } from "@mui/material";
 import { DataGrid, viVN } from "@mui/x-data-grid";
-import { useGetDataQuery } from "state/api";
 import {
   RadioButtonCheckedRounded,
   RadioButtonUncheckedRounded,
 } from "@mui/icons-material";
 import Header from "components/Header";
 import DataGridCustomToolbar from "components/DataGridCustomToolbar";
+import { useGetDataQuery } from "state/api";
 
 const Transactions = () => {
   const theme = useTheme();
@@ -16,81 +16,71 @@ const Transactions = () => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [sort, setSort] = useState({});
-  const [search, setSearch] = useState("");
-
+  const [search, setSearch] = useState({}); // Always search in "time" column
   const [searchInput, setSearchInput] = useState("");
-  const isLoading = false;
-  const data = { transactions: null, total: 1 };
-  data.transactions = [
-    {
-      _id: "1",
-      device: "Đèn",
-      status: "Bật",
-      time: "13:00:00 19/08/2024",
-    },
-    {
-      _id: "2",
-      device: "Điều hòa",
-      status: "Tắt",
-      time: "13:05:00 19/08/2024",
-    },
-  ];
 
+  const { data, isLoading } = useGetDataQuery({
+    page: page + 1,
+    pageSize,
+    sort: JSON.stringify(sort),
+    search: JSON.stringify(search),
+  });
+  console.log(data);
+  // Define columns
   const columns = [
+    { field: "MaThietBi", headerName: "ID", flex: 1 },
     {
-      field: "device",
+      field: "TenThietBi",
       headerName: "Thiết bị",
       flex: 1,
+      renderCell: (params) => {
+        const deviceName =
+          params.value === "quat"
+            ? "Quạt"
+            : params.value === "den"
+            ? "Đèn"
+            : params.value === "dieuhoa"
+            ? "Điều hòa"
+            : params.value; // Nếu không phải "quat" hoặc "den", hiển thị giá trị gốc
+
+        return <span>{deviceName}</span>;
+      },
     },
     {
-      field: "status",
+      field: "TrangThai",
       headerName: "Trạng thái",
       flex: 1,
       renderCell: (params) => (
         <>
           <IconButton>
-            {params.value === "Bật" ? (
+            {params.value === "1" ? (
               <RadioButtonCheckedRounded />
             ) : (
               <RadioButtonUncheckedRounded />
             )}
           </IconButton>
-          {params.value}
+          {params.value === "0" ? "Tắt" : "Bật"}
         </>
       ),
     },
     {
-      field: "time",
+      field: "ThoiGian",
       headerName: "Thời điểm",
       flex: 1,
+      renderCell: (params) => {
+        // Loại bỏ ký tự T và Z
+        const formattedTime = params.value
+          .split(".")[0]
+          .replace("T", " ")
+          .replace("Z", "");
+        return <span>{formattedTime}</span>;
+      },
     },
   ];
+
+  // Custom locale text for DataGrid
   const customLocaleText = {
     ...viVN.components.MuiDataGrid.defaultProps.localeText,
-    toolbarQuickFilterPlaceholder: "Tìm kiếm",
-    toolbarDensity: "Mật độ",
-    toolbarColumns: "Cột",
-    toolbarExport: "Xuất",
-    filterPanelOperator: "Toán tử",
-    columnsPanelTextFieldLabel: "Tìm cột",
-    columnsPanelShowAllButton: "Hiển thị tất cả",
-    columnsPanelHideAllButton: "Ẩn tất cả",
-    filterPanelColumns: "Cột",
-    filterPanelInputLabel: "Giá trị",
-    filterPanelInputPlaceholder: "Lọc giá trị",
-    footerTotalRows: "Tổng số hàng",
-    footerRowSelected: (count) => `${count.toLocaleString()} hàng đã chọn`,
-    noRowsLabel: "Không có dữ liệu",
-    noResultsOverlayLabel: "Không tìm thấy kết quả",
-    densityComfortable: "Thoải mái",
-    densityCompact: "Chật",
-    densityStandard: "Tiêu chuẩn",
-    columnsPanelTextFieldPlaceholder: "Tên cột",
-    filterPanelDeleteIconLabel: "Xóa",
-    columnsPanelHide: "Ẩn",
-    columnsPanelShow: "Hiển thị",
-    footerRowCount: (rowCount, totalRowCount) =>
-      `${rowCount.toLocaleString()} của ${totalRowCount.toLocaleString()}`,
   };
 
   return (
@@ -99,12 +89,8 @@ const Transactions = () => {
       <Box
         height="75vh"
         sx={{
-          "& .MuiDataGrid-root": {
-            border: "none",
-          },
-          "& .MuiDataGrid-cell": {
-            borderBottom: "none",
-          },
+          "& .MuiDataGrid-root": { border: "none" },
+          "& .MuiDataGrid-cell": { borderBottom: "none" },
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: theme.palette.background.alt,
             color: theme.palette.neutral[0],
@@ -125,8 +111,8 @@ const Transactions = () => {
       >
         <DataGrid
           loading={isLoading || !data}
-          getRowId={(row) => row._id}
-          rows={(data && data.transactions) || []}
+          getRowId={(row) => row.MaThietBi}
+          rows={(data && data.thietbi) || []}
           columns={columns}
           rowCount={(data && data.total) || 0}
           rowsPerPageOptions={[20, 50, 100]}
@@ -140,7 +126,15 @@ const Transactions = () => {
           onSortModelChange={(newSortModel) => setSort(...newSortModel)}
           components={{ Toolbar: DataGridCustomToolbar }}
           componentsProps={{
-            toolbar: { searchInput, setSearchInput, setSearch },
+            toolbar: {
+              searchInput,
+              setSearchInput,
+              setSearch: (input) => setSearch({ input, column: "ThoiGian" }), // Force search to always use the "time" column
+              columns,
+              searchcolums: "ThoiGian",
+              selectedColumn: "ThoiGian", // Always set selected column as "time"
+              setSelectedColumn: () => {}, // Disable changing the selected column
+            },
           }}
           localeText={customLocaleText}
         />

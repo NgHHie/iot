@@ -1,15 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
+import { useLocation } from "react-router-dom";
 import FlexBetween from "components/FlexBetween";
 import Header from "components/Header";
 import {
-  BlurOnOutlined,
-  WhatshotOutlined,
-  WaterDropOutlined,
-  LightModeOutlined,
   LightOutlined,
   WindPowerOutlined,
   AcUnitOutlined,
-  AddOutlined,
 } from "@mui/icons-material";
 import {
   Box,
@@ -22,11 +18,17 @@ import OverviewChart from "components/OverviewChart";
 import StatBox from "components/StatBox";
 import SwitchBox from "components/SwitchBox";
 import socketIOClient from "socket.io-client";
+import { useGetSalesQuery } from "../../state/api";
+import { NotificationContext } from "../../context/NotificationContext";
 
 const host = "http://localhost:5001";
 const socket = socketIOClient.connect(host);
 
 const Dashboard = () => {
+  const { toggleNotification, closeNotification } =
+    useContext(NotificationContext);
+
+  const apiData = useGetSalesQuery();
   const [stats, setStats] = useState({
     temper: localStorage.getItem("temper") || "--°C",
     humid: localStorage.getItem("humid") || "--%",
@@ -34,18 +36,68 @@ const Dashboard = () => {
   });
 
   const [on, setOns] = useState({
+    message: "",
     light: localStorage.getItem("light_status") || "0",
     fan: localStorage.getItem("fan_status") || "0",
     air: localStorage.getItem("air_status") || "0",
   });
 
+  // console.log("apidata: ", apiData.data);
+  const [dataDb, setData] = useState(apiData.data);
+  const dataDbRef = useRef(dataDb); // Tạo ref để lưu giá trị mới nhất
+  const location = useLocation();
+
+  useEffect(() => {
+    apiData.refetch();
+  }, [location]);
+  useEffect(() => {
+    dataDbRef.current = dataDb;
+  }, [dataDb]);
+  useEffect(() => {
+    if (apiData) {
+      setData(apiData.data);
+    }
+  }, [apiData]);
+  // console.log(dataDb);
   useEffect(() => {
     socket.on("mqttMessage", (data) => {
       if (data.topic == "home/sensor") {
         try {
           // Parse MQTT message to JSON
-          console.log(data);
+          // console.log("datadb: ", dataDb);
           const messagejson = JSON.parse(data.message);
+          const currentDataDb = dataDbRef.current; // Sử dụng giá trị mới nhất từ ref
+
+          if (currentDataDb) {
+            const updatedData = {
+              temper: [...currentDataDb.temper.slice(0, -1)], // Xóa phần tử cuối cùng
+              humid: [...currentDataDb.humid.slice(0, -1)], // Xóa phần tử cuối cùng
+              light: [...currentDataDb.light.slice(0, -1)], // Xóa phần tử cuối cùng
+            };
+
+            updatedData.temper.unshift({
+              GiaTri: messagejson.temperature,
+              ThoiGian: messagejson.time,
+            });
+            updatedData.humid.unshift({
+              GiaTri: messagejson.humidity,
+              ThoiGian: messagejson.time,
+            });
+            updatedData.light.unshift({
+              GiaTri: messagejson.light_level,
+              ThoiGian: messagejson.time,
+            });
+
+            setData(updatedData);
+            const temper = updatedData.temper?.[0]?.GiaTri;
+            const light = updatedData.light?.[0]?.GiaTri;
+
+            if (temper >= 45 || temper < 10 || light >= 3000) {
+              toggleNotification("Nhà bạn đang bất ổn!!", "warning");
+            } else {
+              closeNotification();
+            }
+          }
 
           // Extract the values and round the temperature
           const newTemper = Math.round(messagejson.temperature) || "--";
@@ -55,8 +107,66 @@ const Dashboard = () => {
           const fan_status = messagejson.fan || "0";
           const air_status = messagejson.air_conditioner || "0";
 
-          // Update state with the new values
+          let message = "";
+
+          // Kiểm tra nhiệt độ
+          if (newTemper < 10) {
+            message += "Nhiệt độ rất lạnh. ";
+          } else if (newTemper >= 10 && newTemper < 15) {
+            message += "Thời tiết mát mẻ. ";
+          } else if (newTemper >= 15 && newTemper < 20) {
+            message += "Nhiệt độ dễ chịu. ";
+          } else if (newTemper >= 20 && newTemper < 25) {
+            message += "Thời tiết ấm áp. ";
+          } else if (newTemper >= 25 && newTemper < 30) {
+            message += "Trời hơi nóng. ";
+          } else if (newTemper >= 30 && newTemper < 35) {
+            message += "Trời nóng. ";
+          } else if (newTemper >= 35 && newTemper < 45) {
+            message += "Trời rất nóng. ";
+          } else {
+            message += "Nhiệt độ cực cao! Cần chú ý giữ mát. ";
+          }
+
+          // Kiểm tra độ ẩm
+          if (newHumid < 30) {
+            message += "Không khí khô. ";
+          } else if (newHumid >= 30 && newHumid < 60) {
+            message += "Độ ẩm vừa phải. ";
+          } else if (newHumid >= 60 && newHumid <= 100) {
+            message += "Không khí ẩm. ";
+          }
+
+          // Kiểm tra ánh sáng
+          if (newLight < 1000) {
+            message += "Ánh sáng thấp. ";
+          } else if (newLight >= 1000 && newLight < 3000) {
+            message += "Ánh sáng lý tưởng. ";
+          } else if (newLight >= 3000 && newLight <= 4095) {
+            message += "Ánh sáng rất mạnh. ";
+          }
+
+          // Đưa ra các kết luận dựa trên sự kết hợp của các yếu tố
+          if (
+            newTemper >= 15 &&
+            newTemper <= 25 &&
+            newHumid >= 30 &&
+            newHumid <= 60 &&
+            newLight >= 1000 &&
+            newLight < 3000
+          ) {
+            message +=
+              "Hôm nay nhà bạn rất dễ chịu, không quá nóng và sáng vừa đủ.";
+          } else if (newTemper >= 30 && newHumid >= 60 && newLight >= 3000) {
+            message +=
+              "Trời rất oi bức với nhiệt độ cao, độ ẩm cao và ánh sáng mạnh. Bạn nên giữ nhà mát.";
+          } else if (newTemper < 10 && newHumid >= 60 && newLight >= 3000) {
+            message +=
+              "Thời tiết lạnh và ẩm, ánh sáng mạnh. Hãy giữ ấm và thông gió cho nhà.";
+          }
+
           setStats({
+            message: message,
             temper: `${newTemper}°C`,
             humid: `${newHumid}%`,
             light: `${newLight}`,
@@ -136,47 +246,23 @@ const Dashboard = () => {
         }}
       >
         {/* ROW 1 */}
-        <StatBox
-          title="Chung"
-          value="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-          description="null"
-          icon={
-            <BlurOnOutlined
-              sx={{ color: theme.palette.neutral[0], fontSize: "26px" }}
-            />
-          }
-        />
+        <StatBox title="Chung" value={stats.message} description="null" />
         <StatBox
           title="Nhiệt độ"
           //value={data && data.todayStats.totalSales}
           value={stats.temper}
-          icon={
-            <WhatshotOutlined
-              sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
-            />
-          }
           description="temper"
         />
         <StatBox
           title="Độ ẩm"
           //value={data && data.thisMonthStats.totalSales}
           value={stats.humid}
-          icon={
-            <WaterDropOutlined
-              sx={{ color: theme.palette.xanhduong[300], fontSize: "26px" }}
-            />
-          }
           description="humid"
         />
         <StatBox
           title="Ánh sáng"
           //value={data && data.yearlySalesTotal}
           value={stats.light}
-          icon={
-            <LightModeOutlined
-              sx={{ color: theme.palette.vang[300], fontSize: "26px" }}
-            />
-          }
           description="light"
         />
         <Box
@@ -234,7 +320,12 @@ const Dashboard = () => {
           }}
         >
           <Box height="95%">
-            <OverviewChart view={view} isDashboard={true} />
+            <OverviewChart
+              view={view}
+              isDashboard={true}
+              dataDb={dataDb}
+              // isLoading={false}
+            />
           </Box>
 
           <Box

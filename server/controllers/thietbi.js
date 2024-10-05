@@ -5,6 +5,7 @@ import {
 
 export const getThietBi = async (req, res) => {
   const data = await getAllThietBi(req);
+  // console.log("data: ", data);
   if (data.status == 200) {
     res.status(200).json({
       thietbi: data.thietbi,

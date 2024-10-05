@@ -2,6 +2,7 @@ import { getAllCamBien } from "../services/cambien.services.js";
 
 export const getCamBien = async (req, res) => {
   const data = await getAllCamBien(req);
+  console.log(req.query);
   if (data.status == 200) {
     res.status(200).json({
       cambien: data.cambien,

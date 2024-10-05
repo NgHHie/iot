@@ -215,7 +215,7 @@ paths:
                     items:
                       type: object
                       properties:
-                        NhietDo:
+                        GiaTri:
                           type: float
                           description: Giá trị nhiệt độ
                         ThoiGian:
@@ -227,7 +227,7 @@ paths:
                     items:
                       type: object
                       properties:
-                        DoAm:
+                        GiaTri:
                           type: float
                           description: Giá trị độ ẩm
                         ThoiGian:
@@ -239,7 +239,7 @@ paths:
                     items:
                       type: object
                       properties:
-                        AnhSang:
+                        GiaTri:
                           type: float
                           description: Giá trị ánh sáng
                         ThoiGian:
@@ -247,19 +247,19 @@ paths:
                           description: Thời gian thu được dữ liệu
                 example:
                   temper:
-                    - NhietDo: 29
+                    - GiaTri: 29
                       ThoiGian: "2024-09-30T14:46:55.000Z"
-                    - NhietDo: 29.2
+                    - GiaTri: 29.2
                       ThoiGian: "2024-09-30T14:46:58.000Z"
                   humid:
-                    - DoAm: 70
+                    - GiaTri: 70
                       ThoiGian: "2024-09-30T14:46:55.000Z"
-                    - DoAm: 70
+                    - GiaTri: 70
                       ThoiGian: "2024-09-30T14:46:58.000Z"
                   light:
-                    - AnhSang: 1000
+                    - GiaTri: 1000
                       ThoiGian: "2024-09-30T14:46:55.000Z"
-                    - AnhSang: 1033
+                    - GiaTri: 1033
                       ThoiGian: "2024-09-30T14:46:58.000Z"           
         404:
           description: Lỗi

@@ -11,7 +11,7 @@ export const getDataDashBoard = async (req) => {
     date.setHours(date.getHours() + 7);
     const today = date.toISOString().split("T")[0];
     const page = 1,
-      pageSize = 20,
+      pageSize = 10,
       sort = "",
       search = today,
       field = "ThoiGian";
@@ -19,9 +19,9 @@ export const getDataDashBoard = async (req) => {
     // console.log(cambien);
     cambien["cambien"].forEach((item) => {
       const { NhietDo, DoAm, AnhSang, ThoiGian } = item;
-      data.nhietdo.push({ NhietDo, ThoiGian });
-      data.doam.push({ DoAm, ThoiGian });
-      data.anhsang.push({ AnhSang, ThoiGian });
+      data.nhietdo.push({ GiaTri: NhietDo, ThoiGian });
+      data.doam.push({ GiaTri: DoAm, ThoiGian });
+      data.anhsang.push({ GiaTri: AnhSang, ThoiGian });
     });
     // console.log(data);
     return data;

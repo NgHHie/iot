@@ -13,32 +13,50 @@ export const queryAllCamBien = async (page, pageSize, sort, search, field) => {
   };
 
   const sortFormatted = Boolean(sort) ? generateSort() : { ThoiGian: "DESC" }; // Default sort by ThoiGian
+  const generateSearch = () => {
+    const searchParsed = JSON.parse(search);
+    // searchParsed.column = searchParsed.column || "ThoiGian";
+    if (!Object.keys(searchParsed).includes("input")) {
+      return null;
+    } else if (!Object.keys(searchParsed).includes("column")) {
+      searchParsed.column = "all";
+    }
+    return Object.keys(searchParsed).length ? searchParsed : null;
+  };
 
+  const searchFormatted = generateSearch();
+  console.log("search: ");
   // Build search condition based on the specified field
-  const searchCondition = search
-    ? field === "all"
+  const searchCondition = searchFormatted
+    ? searchFormatted.column === "all"
       ? {
           [Op.or]: [
             {
               MaCamBien: {
-                [Op.eq]: isNaN(parseInt(search, 10))
+                [Op.eq]: isNaN(parseInt(searchFormatted.input, 10))
                   ? null
-                  : parseInt(search, 10),
+                  : parseInt(searchFormatted.input, 10),
               },
             },
             {
               NhietDo: {
-                [Op.eq]: isNaN(parseFloat(search)) ? null : parseFloat(search),
+                [Op.eq]: isNaN(parseFloat(searchFormatted.input))
+                  ? null
+                  : parseFloat(searchFormatted.input),
               },
             },
             {
               DoAm: {
-                [Op.eq]: isNaN(parseFloat(search)) ? null : parseFloat(search),
+                [Op.eq]: isNaN(parseFloat(searchFormatted.input))
+                  ? null
+                  : parseFloat(searchFormatted.input),
               },
             },
             {
               AnhSang: {
-                [Op.eq]: isNaN(parseFloat(search)) ? null : parseFloat(search),
+                [Op.eq]: isNaN(parseFloat(searchFormatted.input))
+                  ? null
+                  : parseFloat(searchFormatted.input),
               },
             },
             sequelize.where(
@@ -47,38 +65,44 @@ export const queryAllCamBien = async (page, pageSize, sort, search, field) => {
                 sequelize.col("ThoiGian"),
                 "%Y-%m-%d %H:%i:%s"
               ),
-              { [Op.like]: `%${search}%` } // ThoiGian là date, so sánh theo định dạng
+              { [Op.like]: `%${searchFormatted.input}%` } // ThoiGian là date, so sánh theo định dạng
             ),
           ],
         }
       : {
-          [field]: (() => {
-            if (field === "MaCamBien") {
+          [searchFormatted.column]: (() => {
+            if (searchFormatted.column === "MaCamBien") {
               return {
-                [Op.eq]: isNaN(parseInt(search, 10))
+                [Op.eq]: isNaN(parseInt(searchFormatted.input, 10))
                   ? null
-                  : parseInt(search, 10),
+                  : parseInt(searchFormatted.input, 10),
               }; // So sánh int
-            } else if (field === "NhietDo") {
+            } else if (searchFormatted.column === "NhietDo") {
               return {
-                [Op.eq]: isNaN(parseFloat(search)) ? null : parseFloat(search),
+                [Op.eq]: isNaN(parseFloat(searchFormatted.input))
+                  ? null
+                  : parseFloat(searchFormatted.input),
               };
-            } else if (field === "DoAm") {
+            } else if (searchFormatted.column === "DoAm") {
               return {
-                [Op.eq]: isNaN(parseFloat(search)) ? null : parseFloat(search),
+                [Op.eq]: isNaN(parseFloat(searchFormatted.input))
+                  ? null
+                  : parseFloat(searchFormatted.input),
               };
-            } else if (field === "AnhSang") {
+            } else if (searchFormatted.column === "AnhSang") {
               return {
-                [Op.eq]: isNaN(parseFloat(search)) ? null : parseFloat(search),
+                [Op.eq]: isNaN(parseFloat(searchFormatted.input))
+                  ? null
+                  : parseFloat(searchFormatted.input),
               };
-            } else if (field === "ThoiGian") {
+            } else if (searchFormatted.column === "ThoiGian") {
               return sequelize.where(
                 sequelize.fn(
                   "DATE_FORMAT",
                   sequelize.col("ThoiGian"),
                   "%Y-%m-%d %H:%i:%s"
                 ),
-                { [Op.like]: `%${search}%` }
+                { [Op.like]: `%${searchFormatted.input}%` }
               ); // So sánh date
             }
             return {};
@@ -96,7 +120,7 @@ export const queryAllCamBien = async (page, pageSize, sort, search, field) => {
     limit: parseInt(pageSize, 10),
   });
 
-  console.log(cambien);
+  // console.log(cambien);
   const data = { cambien: cambien, total: total };
   return data;
 };

@@ -1,23 +1,13 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo } from "react";
 import { ResponsiveLine } from "@nivo/line";
 import { useTheme } from "@mui/material";
-import { useGetSalesQuery } from "state/api";
+// import { useGetSalesQuery } from "state/api";
 
-const OverviewChart = ({ isDashboard = false, view }) => {
+const OverviewChart = ({ isDashboard = false, view, dataDb }) => {
   const theme = useTheme();
-  const { data, isLoading, refetch } = useGetSalesQuery();
-
-  // Re-fetch data every minute
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetch();
-    }, 60000); // 60 seconds
-
-    return () => clearInterval(interval); // Clear interval on component unmount
-  }, [refetch]);
-
+  console.log(dataDb);
   const [totalDataLine, xTickValues] = useMemo(() => {
-    if (!data) return [[], []];
+    if (!dataDb) return [[], []];
 
     const totalDataLine = {
       id: view,
@@ -25,42 +15,35 @@ const OverviewChart = ({ isDashboard = false, view }) => {
     };
 
     const xTickValues = [];
-    const values = [...data[view]].reverse(); // Access the corresponding sub-array for the view
-    const seenHours = new Set();
+    const values = [...dataDb[view]].reverse();
 
-    const averages = {}; // Object to store total and count for averages
-
-    values.forEach(({ ThoiGian, GiaTri }) => {
-      let time = ThoiGian.split("T")[1].split(".")[0]; // hh:mm:ss
-      const hourMinute = time.substring(0, 5); // Extract hh:mm from hh:mm:ss
-
-      // Initialize the averages object for each minute
-      if (!averages[hourMinute]) {
-        averages[hourMinute] = { sum: 0, count: 0 };
+    totalDataLine.data = values.map((value) => {
+      const time = new Date(value.ThoiGian);
+      if (value.ThoiGian.includes("T") && value.ThoiGian.includes("Z")) {
+        time.setHours(time.getHours() - 7);
       }
 
-      // Sum up the value and count occurrences
-      averages[hourMinute].sum += GiaTri;
-      averages[hourMinute].count += 1;
+      const hours = String(time.getHours()).padStart(2, "0");
+      const minutes = String(time.getMinutes()).padStart(2, "0");
+      const seconds = String(time.getSeconds()).padStart(2, "0");
 
-      // Generate tick values every 5 minutes
-      const [hour, minute] = hourMinute.split(":").map(Number);
-      if (!seenHours.has(hourMinute)) {
-        seenHours.add(hourMinute);
-        xTickValues.push(hourMinute);
-      }
+      const formattedTime = `${hours}:${minutes}:${seconds}`;
+      xTickValues.push(formattedTime);
+
+      return {
+        x: formattedTime,
+        y: value.GiaTri,
+      };
     });
 
-    // Calculate average values and populate totalDataLine
-    for (const [key, { sum, count }] of Object.entries(averages)) {
-      totalDataLine.data.push({ x: key, y: sum / count }); // Average for each minute
-    }
-
     return [[totalDataLine], xTickValues];
-  }, [data, view]);
+  }, [dataDb, view]);
 
-  if (!data || isLoading) return "Loading...";
+  // // Return loading message if data is still being fetched
+  // if (isLoading || !data) return "Loading...";
+  // console.log("is: ", isLoading);
 
+  // Function to determine colors based on the view
   const getColors = (view) => {
     switch (view) {
       case "temper":
@@ -146,10 +129,6 @@ const OverviewChart = ({ isDashboard = false, view }) => {
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        tickValues: xTickValues.filter(
-          (value) => parseInt(value.split(":")[1]) % 20 === 0
-        ),
-
         legend: isDashboard ? "" : "Time",
         legendOffset: 36,
         legendPosition: "middle",
@@ -176,6 +155,8 @@ const OverviewChart = ({ isDashboard = false, view }) => {
           : [0, 20, 40, 60, 80, 100]
       }
       pointSize={10}
+      pointBorderWidth={2}
+      pointBorderColor={{ from: "serieColor" }}
       pointColor={{ theme: "background" }}
       pointLabelYOffset={-12}
       useMesh={true}

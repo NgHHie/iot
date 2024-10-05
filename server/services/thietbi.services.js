@@ -14,16 +14,25 @@ export const queryAllThietBi = async (page, pageSize, sort, search) => {
   };
 
   const sortFormatted = Boolean(sort) ? generateSort() : { ThoiGian: "DESC" }; // Default sort by MaThietBi
-
+  console.log("sort: ", Boolean(sort));
   // Build search condition: if search exists, search in multiple fields
-  const searchCondition = search
+  const generateSearch = () => {
+    const searchParsed = JSON.parse(search);
+    // searchParsed.column = searchParsed.column || "ThoiGian";
+
+    return Object.keys(searchParsed).length ? searchParsed : null;
+  };
+
+  const searchFormatted = generateSearch();
+  console.log("search: ");
+  const searchCondition = searchFormatted
     ? {
         [Op.or]: [
           {
             [Op.and]: sequelize.where(
               fn("DATE_FORMAT", col("ThoiGian"), "%Y-%m-%d %H:%i:%s"),
               {
-                [Op.like]: `%${search}%`,
+                [Op.like]: `%${searchFormatted.input}%`,
               }
             ),
           },
@@ -38,7 +47,7 @@ export const queryAllThietBi = async (page, pageSize, sort, search) => {
     offset: (page - 1) * pageSize,
     limit: parseInt(pageSize, 10),
   });
-
+  // console.log("thietbi: ", thietbi);
   // Count total records
   const total = await models.ThietBi.count({
     where: searchCondition,
@@ -50,7 +59,7 @@ export const queryAllThietBi = async (page, pageSize, sort, search) => {
 export const getAllThietBi = async (req) => {
   let data = {};
   try {
-    const { page = 1, pageSize = 20, sort = null, search = "" } = req.query;
+    const { page = 1, pageSize = 20, sort = null, search = null } = req.query;
     console.log(req.query);
     const { thietbi, total } = await queryAllThietBi(
       page,

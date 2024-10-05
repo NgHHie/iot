@@ -25,18 +25,18 @@ import FlexBetween from "./FlexBetween";
 
 const menuItems = [
   {
-    label: "Tổng quan",
-    route: "overview",
+    label: "Dashboard",
+    route: "",
     icon: <ControlIcon />,
   },
   {
-    label: "Dữ liệu",
-    route: "data",
+    label: "Data Sensor",
+    route: "data_sensor",
     icon: <StatsIcon />,
   },
   {
-    label: "Lịch sử",
-    route: "histories",
+    label: "Action History",
+    route: "action_history",
     icon: <HistoryIcon />,
   },
 ];

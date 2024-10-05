@@ -7,7 +7,7 @@ export const api = createApi({
   endpoints: (build) => ({
     getData: build.query({
       query: ({ page, pageSize, sort, search }) => ({
-        url: "client/data",
+        url: "api/action_history",
         method: "GET",
         params: { page, pageSize, sort, search },
       }),
@@ -18,7 +18,11 @@ export const api = createApi({
       providesTags: ["Sales"],
     }),
     getOverview: build.query({
-      query: () => "general/overview",
+      query: ({ page, pageSize, sort, search }) => ({
+        url: "api/data_sensor",
+        method: "GET",
+        params: { page, pageSize, sort, search },
+      }),
       providesTags: ["Overview"],
     }),
   }),
