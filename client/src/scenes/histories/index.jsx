@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Box, IconButton, useTheme } from "@mui/material";
 import { DataGrid, viVN } from "@mui/x-data-grid";
 import {
@@ -11,6 +12,7 @@ import { useGetDataQuery } from "state/api";
 
 const Transactions = () => {
   const theme = useTheme();
+  const location = useLocation();
 
   // values to be sent to the backend
   const [page, setPage] = useState(0);
@@ -19,13 +21,16 @@ const Transactions = () => {
   const [search, setSearch] = useState({}); // Always search in "time" column
   const [searchInput, setSearchInput] = useState("");
 
-  const { data, isLoading } = useGetDataQuery({
+  const { data, isLoading, refetch } = useGetDataQuery({
     page: page + 1,
     pageSize,
     sort: JSON.stringify(sort),
     search: JSON.stringify(search),
   });
-  console.log(data);
+  useEffect(() => {
+    refetch();
+  }, [location, refetch]);
+  // console.log(data);
   // Define columns
   const columns = [
     { field: "MaThietBi", headerName: "ID", flex: 1 },

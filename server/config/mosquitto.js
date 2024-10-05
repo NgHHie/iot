@@ -58,13 +58,13 @@ export const initMqtt = async (io) => {
         ThoiGian: new Date(payloadjson.time),
       };
       data.ThoiGian.setHours(data.ThoiGian.getHours() + 7);
-      console.log(data);
+      // console.log(data);
       postDataThietBi(data);
     } else if (topic == "home/sensor") {
       const payloadjson = JSON.parse(payload.toString());
       const time = new Date(payloadjson.time);
       time.setHours(time.getHours() + 7);
-      console.log(payloadjson);
+      // console.log(payloadjson);
       // let data = [];
       let data = {
         NhietDo: parseFloat(payloadjson.temperature),

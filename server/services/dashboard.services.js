@@ -13,9 +13,9 @@ export const getDataDashBoard = async (req) => {
     const page = 1,
       pageSize = 10,
       sort = "",
-      search = today,
-      field = "ThoiGian";
-    const cambien = await queryAllCamBien(page, pageSize, sort, search, field);
+      search = JSON.stringify({ column: "ThoiGian", input: today });
+    // field = "ThoiGian";
+    const cambien = await queryAllCamBien(page, pageSize, sort, search);
     // console.log(cambien);
     cambien["cambien"].forEach((item) => {
       const { NhietDo, DoAm, AnhSang, ThoiGian } = item;
@@ -27,6 +27,7 @@ export const getDataDashBoard = async (req) => {
     return data;
   } catch (error) {
     data.status = 404;
+    data.message = error.message;
     return data;
   }
 };

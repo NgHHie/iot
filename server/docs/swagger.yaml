@@ -40,7 +40,7 @@ paths:
             type: string
         - name: search
           in: query
-          description: từ khóa tìm kiếm
+          description: tìm kiếm theo thời gian (JSON format, ví dụ: {"input": "2024-09-30", "column": "ThoiGian"})
           required: false
           schema:
             type: string
@@ -138,16 +138,11 @@ paths:
             type: string
         - name: search
           in: query
-          description: từ khóa tìm kiếm
+          description: từ khóa tìm kiếm theo trường (JSON format, ví dụ: {"input": "29", "column": "NhietDo"}), cột column có thể là all
           required: false
           schema:
             type: string
-        - name: field
-          in: query
-          description: trường tìm kiếm
-          required: false
-          schema:
-            type: string
+
       responses:
         200:
           description: Dữ liệu cảm biến đã thu được

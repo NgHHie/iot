@@ -10,6 +10,6 @@ export const getDashBoard = async (req, res) => {
       light: data.anhsang,
     });
   } else {
-    res.status(data.status).json({ message: "err" });
+    res.status(data.status).json({ message: data.message });
   }
 };

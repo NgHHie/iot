@@ -216,6 +216,12 @@ const StatBox = ({ title, value, description, onChange }) => {
           color: getColor(description, 1),
           overflowWrap: "break-word",
           wordBreak: "break-word",
+          overflow: "auto",
+          "&::-webkit-scrollbar": {
+            // Ẩn thanh cuộn trên Chrome, Safari
+            display: "none",
+          },
+          scrollbarWidth: "none",
         }}
       >
         {value}

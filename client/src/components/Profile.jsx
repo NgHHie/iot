@@ -169,7 +169,10 @@ const Profile = ({ onClose }) => {
         >
           <Button
             onClick={() => {
-              window.open("https://web.facebook.com/0okawaII/", "_blank");
+              window.open(
+                "https://docs.google.com/document/d/1AZMU3fWgRnvAKdNFs_LeXjf7BTpsGzGBz58J2MmrOLw/edit?usp=sharing",
+                "_blank"
+              );
             }}
             variant="contained"
             sx={{
@@ -189,7 +192,7 @@ const Profile = ({ onClose }) => {
           </Button>
           <Button
             onClick={() => {
-              window.open("https://github.com/NgHHie", "_blank");
+              window.open("http://localhost:5001/api/docs", "_blank");
             }}
             variant="contained"
             sx={{
@@ -209,7 +212,7 @@ const Profile = ({ onClose }) => {
           </Button>
           <Button
             onClick={() => {
-              window.open("https://github.com/NgHHie", "_blank");
+              window.open("https://github.com/NgHHie/iot", "_blank");
             }}
             variant="contained"
             sx={{
