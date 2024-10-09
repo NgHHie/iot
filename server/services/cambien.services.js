@@ -128,25 +128,18 @@ export const queryAllCamBien = async (page, pageSize, sort, search, field) => {
 export const getAllCamBien = async (req) => {
   let data = {};
   try {
-    const {
-      page = 1,
-      pageSize = 20,
-      sort = null,
-      search = "",
-      field = "all",
-    } = req.query;
+    const { page = 1, pageSize = 20, sort = "{}", search = "{}" } = req.query;
 
     const { cambien = [], total = 0 } = await queryAllCamBien(
       page,
       pageSize,
       sort,
-      search,
-      field
+      search
     );
 
     data = { status: 200, cambien, total };
   } catch (error) {
-    data = { status: 404, message: error.message };
+    data = { status: 404, message: "Lỗi server." };
   }
   return data;
 };

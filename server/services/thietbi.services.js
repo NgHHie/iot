@@ -59,7 +59,7 @@ export const queryAllThietBi = async (page, pageSize, sort, search) => {
 export const getAllThietBi = async (req) => {
   let data = {};
   try {
-    const { page = 1, pageSize = 20, sort = null, search = null } = req.query;
+    const { page = 1, pageSize = 20, sort = "{}", search = "{}" } = req.query;
     console.log(req.query);
     const { thietbi, total } = await queryAllThietBi(
       page,
@@ -70,7 +70,7 @@ export const getAllThietBi = async (req) => {
 
     data = { status: 200, thietbi: thietbi, total: total };
   } catch (error) {
-    data = { status: 404, message: error.message };
+    data = { status: 404, message: "Lỗi server." };
   }
   return data;
 };
@@ -88,6 +88,6 @@ export const postRemoteThietBi = async (req) => {
 
     return { status: 200 };
   } catch (error) {
-    return { status: 404, message: error.message };
+    return { status: 404, message: "Yêu cầu không thành công." };
   }
 };

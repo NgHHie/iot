@@ -44,7 +44,6 @@ paths:
           required: false
           schema:
             type: string
-
       responses:
         200:
           description: Lịch sử điều khiển thiết bị được trả về
@@ -86,7 +85,17 @@ paths:
                       ThoiGian: "2024-09-29T14:46:55.000Z"
                   total: 2
         404:
-          description: Lỗi
+          description: Lỗi được phát hiện
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Lỗi được phát hiện
+                example:
+                  message: "Số thứ tự trang không hợp lệ, phải >= 1."
   /api/remote:
     post:
       tags:
@@ -106,12 +115,34 @@ paths:
                 message:
                   type: string
                   description: bật/tắt
+              example:
+                topic: "home/light"
+                message: "1"
       responses:
         200:
           description: Gửi yêu cầu thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Gửi yêu cầu thành công
+                example:
+                  message: "Gửi yêu cầu thành công."
         404:
-          description: Lỗi
-
+          description: Gửi yêu cầu thất bại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Gửi yêu cầu thất bại
+                example:
+                  message: "Gửi yêu cầu thất bại."
   /api/data_sensor:
     get:
       tags:
@@ -142,7 +173,6 @@ paths:
           required: false
           schema:
             type: string
-
       responses:
         200:
           description: Dữ liệu cảm biến đã thu được
@@ -189,8 +219,17 @@ paths:
                       ThoiGian: "2024-09-30T14:46:58.000Z"
                   total: 2
         404:
-          description: Lỗi
-
+          description: Lỗi được phát hiện
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Lỗi được phát hiện
+                example:
+                  message: "Số thứ tự trang không hợp lệ, phải >= 1."
   /api/dashboard:
     get:
       tags:
@@ -257,4 +296,4 @@ paths:
                     - GiaTri: 1033
                       ThoiGian: "2024-09-30T14:46:58.000Z"           
         404:
-          description: Lỗi
+          description: Lỗi 
