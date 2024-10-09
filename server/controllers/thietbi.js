@@ -51,7 +51,7 @@ export const postThietBi = async (req, res) => {
   if (!topic || !message) {
     return res.status(404).json({ message: "Thiếu thông tin." });
   }
-  if (message != "0" || message != "1") {
+  if (message != "0" && message != "1") {
     return res
       .status(404)
       .json({ message: `Dữ liệu không hợp lệ, phải là "0" hoặc "1".` });
