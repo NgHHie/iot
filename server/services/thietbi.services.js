@@ -18,7 +18,13 @@ export const queryAllThietBi = async (page, pageSize, sort, search) => {
   // Build search condition: if search exists, search in multiple fields
   const generateSearch = () => {
     const searchParsed = JSON.parse(search);
-    // searchParsed.column = searchParsed.column || "ThoiGian";
+    if (
+      searchParsed &&
+      typeof searchParsed.input === "string" &&
+      searchParsed.input.trim() === ""
+    ) {
+      delete searchParsed.input; // Xóa trường 'input' nếu nó là chuỗi rỗng sau khi trim
+    }
 
     return Object.keys(searchParsed).length ? searchParsed : null;
   };
