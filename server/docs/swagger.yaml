@@ -12,6 +12,8 @@ tags:
     description: Dữ liệu cảm biến
   - name: DashBoard
     description: Lấy dữ liệu dashboard
+  - name: Remote
+    description: Điều khiển thiết bị từ xa
 
 paths:
   /api/action_history:

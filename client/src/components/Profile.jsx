@@ -170,7 +170,7 @@ const Profile = ({ onClose }) => {
           <Button
             onClick={() => {
               window.open(
-                "https://docs.google.com/document/d/1AZMU3fWgRnvAKdNFs_LeXjf7BTpsGzGBz58J2MmrOLw/edit?usp=sharing",
+                "https://drive.google.com/file/d/1YL5yRvbIEeRvw4ut3QI826kRDeE6eyF9/view?usp=sharing",
                 "_blank"
               );
             }}
