@@ -32,6 +32,11 @@ const Transactions = () => {
   const columns = [
     { field: "MaCamBien", headerName: "ID", flex: 1 },
     {
+      field: "NewCamBien",
+      headerName: "Cảm biến",
+      flex: 1,
+    },
+    {
       field: "NhietDo",
       headerName: "Nhiệt độ",
       flex: 1,

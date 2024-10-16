@@ -51,6 +51,12 @@ export const queryAllCamBien = async (page, pageSize, sort, search) => {
                 ),
               },
               {
+                NewCamBien: sequelize.where(
+                  sequelize.cast(sequelize.col("NewCamBien"), "CHAR"),
+                  { [Op.like]: `%${searchFormatted.input}%` }
+                ),
+              },
+              {
                 NhietDo: sequelize.where(
                   sequelize.cast(sequelize.col("NhietDo"), "CHAR"),
                   { [Op.like]: `%${searchFormatted.input}%` }
@@ -84,6 +90,11 @@ export const queryAllCamBien = async (page, pageSize, sort, search) => {
                 case "MaCamBien":
                   return sequelize.where(
                     sequelize.cast(sequelize.col("MaCamBien"), "CHAR"),
+                    { [Op.like]: `%${searchFormatted.input}%` }
+                  );
+                case "NewCamBien":
+                  return sequelize.where(
+                    sequelize.cast(sequelize.col("NewCamBien"), "CHAR"),
                     { [Op.like]: `%${searchFormatted.input}%` }
                   );
                 case "NhietDo":
@@ -160,4 +171,41 @@ export const postDataCamBien = async (data) => {
   try {
     const res = await models.CamBien.create(data);
   } catch (error) {}
+};
+
+export const getCount = async () => {
+  let data = {};
+  try {
+    const res = await models.CanhBao.findOrCreate({
+      where: { Id: 1 },
+      defaults: {
+        Count: 0,
+      },
+    });
+    console.log(res[0].Count);
+
+    data = { status: 200, data: res[0] };
+  } catch (error) {
+    data = { status: 404, message: "Lỗi server." };
+  }
+  return data;
+};
+export const updateCount = async () => {
+  let data = {};
+  try {
+    const res = await models.CanhBao.findOrCreate({
+      where: { Id: 1 },
+      defaults: {
+        Count: 0,
+      },
+    });
+
+    console.log(res[0].Count);
+    await models.CanhBao.update(
+      { Count: res[0].Count + 1 }, // Tăng Count thêm 1
+      { where: { Id: 1 } } // Điều kiện Id bằng 1
+    );
+  } catch (error) {
+    data = { status: 404, message: "Lỗi server." };
+  }
 };

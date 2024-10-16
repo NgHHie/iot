@@ -6,7 +6,7 @@ export const queryAllThietBi = async (page, pageSize, sort, search) => {
   // Generate sort format for Sequelize (example: { TenThietBi: 'DESC' })
   const generateSort = () => {
     const sortParsed = JSON.parse(sort);
-    sortParsed.field = sortParsed.field || "ThoiGian";
+    sortParsed.field = sortParsed.field || "MaThietBi";
     const sortFormatted = {
       [sortParsed.field]: sortParsed.sort === "asc" ? "ASC" : "DESC",
     };

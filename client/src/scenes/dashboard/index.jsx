@@ -23,8 +23,25 @@ import { NotificationContext } from "../../context/NotificationContext";
 
 const host = "http://localhost:5001";
 const socket = socketIOClient.connect(host);
-
+localStorage.setItem("count", localStorage.getItem("count") || 0);
 const Dashboard = () => {
+  const [count, setCount] = useState(0); // Khởi tạo state để lưu trữ giá trị
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const response = await fetch("http://localhost:5001/api/count");
+        const data = await response.json();
+        // console.log();
+        setCount(data.data.Count); // Giả sử API trả về { count: giá trị }
+      } catch (error) {
+        console.error("Fetch failed:", error);
+      }
+    };
+
+    fetchCount(); // Gọi hàm fetch khi component mount
+  }, []);
+
   const { toggleNotification, closeNotification } =
     useContext(NotificationContext);
 
@@ -40,6 +57,7 @@ const Dashboard = () => {
     light: localStorage.getItem("light_status") || "0",
     fan: localStorage.getItem("fan_status") || "0",
     air: localStorage.getItem("air_status") || "0",
+    hiep: "0",
   });
 
   // console.log("apidata: ", apiData.data);
@@ -59,13 +77,20 @@ const Dashboard = () => {
     }
   }, [apiData]);
   // console.log(dataDb);
+
   useEffect(() => {
     socket.on("mqttMessage", (data) => {
       if (data.topic == "home/sensor") {
         try {
           // Parse MQTT message to JSON
-          // console.log("datadb: ", dataDb);
+
           const messagejson = JSON.parse(data.message);
+          console.log(messagejson);
+          if (parseInt(messagejson.new_sensor) >= 60) {
+            let currentCount = parseInt(localStorage.getItem("count")) || 0; // Chuyển chuỗi thành số, hoặc đặt mặc định là 0
+            localStorage.setItem("count", currentCount + 1); // Tăng giá trị lên 1
+          }
+
           const currentDataDb = dataDbRef.current; // Sử dụng giá trị mới nhất từ ref
 
           if (currentDataDb) {
@@ -100,12 +125,14 @@ const Dashboard = () => {
           }
 
           // Extract the values and round the temperature
+          const newSensor = messagejson.new_sensor || "--";
           const newTemper = Math.round(messagejson.temperature) || "--";
           const newHumid = messagejson.humidity || "--";
           const newLight = messagejson.light_level || "--";
           const light_status = messagejson.light || "0";
           const fan_status = messagejson.fan || "0";
           const air_status = messagejson.air_conditioner || "0";
+          const hiep_status = localStorage.getItem("hiep_status") || "0";
 
           let message = "";
 
@@ -166,7 +193,7 @@ const Dashboard = () => {
           }
 
           setStats({
-            message: message,
+            message: `${newSensor}`,
             temper: `${newTemper}°C`,
             humid: `${newHumid}%`,
             light: `${newLight}`,
@@ -176,6 +203,7 @@ const Dashboard = () => {
             light: light_status,
             fan: fan_status,
             air: air_status,
+            hiep: localStorage.getItem("hiep_status"),
           });
 
           // Save data to localStorage
@@ -186,6 +214,7 @@ const Dashboard = () => {
           localStorage.setItem("light_status", light_status);
           localStorage.setItem("fan_status", fan_status);
           localStorage.setItem("air_status", air_status);
+          // localStorage.setItem("hiep_status", hiep_status);
         } catch (error) {
           console.error("Error parsing MQTT message:", error);
         }
@@ -197,6 +226,7 @@ const Dashboard = () => {
             light: messagejson.status,
             fan: localStorage.getItem("fan_status") || "0",
             air: localStorage.getItem("air_status") || "0",
+            hiep: localStorage.getItem("hiep_status") || "0",
           });
         } else if (data.topic == "fan_status") {
           localStorage.setItem("fan_status", messagejson.status);
@@ -204,11 +234,21 @@ const Dashboard = () => {
             fan: messagejson.status,
             light: localStorage.getItem("light_status") || "0",
             air: localStorage.getItem("air_status") || "0",
+            hiep: localStorage.getItem("hiep_status") || "0",
           });
         } else if (data.topic == "air_status") {
           localStorage.setItem("air_status", messagejson.status);
           setOns({
             air: messagejson.status,
+            light: localStorage.getItem("light_status") || "0",
+            fan: localStorage.getItem("fan_status") || "0",
+            hiep: localStorage.getItem("hiep_status") || "0",
+          });
+        } else if (data.topic == "hiep_status") {
+          localStorage.setItem("hiep_status", messagejson.status);
+          setOns({
+            hiep: messagejson.status,
+            air: localStorage.getItem("air_status") || "0",
             light: localStorage.getItem("light_status") || "0",
             fan: localStorage.getItem("fan_status") || "0",
           });
@@ -246,7 +286,7 @@ const Dashboard = () => {
         }}
       >
         {/* ROW 1 */}
-        <StatBox title="Chung" value={stats.message} description="null" />
+        <StatBox title="Chung" value={stats.message} description="hiep" />
         <StatBox
           title="Nhiệt độ"
           //value={data && data.todayStats.totalSales}
@@ -295,6 +335,12 @@ const Dashboard = () => {
           <SwitchBox
             title="Điều hòa"
             status={on.air}
+            icon={<AcUnitOutlined />}
+          />
+
+          <SwitchBox
+            title={`Cảnh báo ${count}`}
+            status={on.hiep}
             icon={<AcUnitOutlined />}
           />
           {/* <SwitchBox

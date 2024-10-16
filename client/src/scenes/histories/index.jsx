@@ -46,6 +46,8 @@ const Transactions = () => {
             ? "Đèn"
             : params.value === "dieuhoa"
             ? "Điều hòa"
+            : params.value === "ledcanhbao"
+            ? "Đèn cảnh báo"
             : params.value; // Nếu không phải "quat" hoặc "den", hiển thị giá trị gốc
 
         return <span>{deviceName}</span>;

@@ -1,4 +1,15 @@
-import { getAllCamBien } from "../services/cambien.services.js";
+import { getAllCamBien, getCount } from "../services/cambien.services.js";
+
+export const getCountHiep = async (req, res) => {
+  const data = await getCount();
+  if (data.status == 200) {
+    res.status(200).json({
+      data: data.data,
+    });
+  } else {
+    res.status(data.status).json({ message: data.message });
+  }
+};
 
 export const getCamBien = async (req, res) => {
   const { page, pageSize, sort, search } = req.query;
@@ -31,7 +42,7 @@ export const getCamBien = async (req, res) => {
   }
 
   const data = await getAllCamBien(req);
-  console.log(req.query);
+  console.log(data.cambien);
   if (data.status == 200) {
     res.status(200).json({
       cambien: data.cambien,

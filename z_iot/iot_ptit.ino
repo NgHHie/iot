@@ -12,6 +12,7 @@
 #define ledGPIO 13  //define for light
 #define fanGPIO 12  //define for fan
 #define airConditioner 14 //define for air conditioner
+#define hiepGPIO 19
 #define dht11GPIO 5 // define for humidity and temperature
 #define DHTTYPE DHT11
 #define lightGPIO 34 // su dung de do anh sang 
@@ -19,24 +20,18 @@ const char* sensorData = "home/sensor";  // tra ve ten topic va du lieu la 0 or 
 const char* statusLight = "home/light";
 const char*  statusFan =  "home/fan";
 const char* statusAirConditioner =  "home/air_conditioner";
+const char* statusHiep = "home/hiep";
 const char* statusAll = "home/all";
 
 DHT dht(dht11GPIO, DHTTYPE);
 
-
 const char *ssid = "KawaII"; // wifi name
 const char* password = "dmcayvcl"; //wifi password
-// WiFiUDP udp;
-// NTPClient timeClient(udp, "117.122.120.80", 3600, 60000);
 
-// config server
 const char* mqtt_server = "172.20.10.3";
 const  int mqtt_port = 1883;
 const char* mqtt_username = "hiep";
 const char* mqtt_password = "1111";
-
-
-// set time use for send data to hivemmq cloud 1 minute
 
 const unsigned long sendInterval = 3000;
 unsigned long lastSend = 0;
@@ -71,17 +66,48 @@ float roundTo(float value, int decimalPlaces) {
     float factor = pow(10.0, decimalPlaces);
     return round(value * factor) / factor;
 }
-void publich_message_data(const char* topic)
-{
+
+int generateRandomNumber() {
+    return random(0, 101); // Sinh số ngẫu nhiên từ 1 đến 100
+}
+int lastHiepState = LOW;
+void nhapNhayDen(int randomNum) {
+  if(randomNum >= 60) {
+    for(int i=0; i<3; i++) {
+      // Nếu số lớn hơn 80, tiếp tục nhấp nháy đèn
+      digitalWrite(hiepGPIO, HIGH); // Bật đèn
+      int currentHiepState = digitalRead(hiepGPIO);  
+      if (currentHiepState != lastHiepState) {  
+          lastHiepState = currentHiepState;  
+          public_message_status_device("hiep_status", currentHiepState == HIGH ? "1" : "0");
+      }
+      delay(500); // Đợi 500ms
+      digitalWrite(hiepGPIO, LOW);  // Tắt đèn
+      currentHiepState = digitalRead(hiepGPIO);  
+      if (currentHiepState != lastHiepState) {  
+          lastHiepState = currentHiepState;  
+          public_message_status_device("hiep_status", currentHiepState == HIGH ? "1" : "0");
+      }
+      delay(500); // Đợi 500ms
+    }
+    // Có thể thêm logic khác ở đây nếu cần, nhưng randomNum không đổi.
+  }
+
+  // Nếu số nhỏ hơn hoặc bằng 80, tắt đèn và thoát vòng lặp
+  digitalWrite(hiepGPIO, LOW);
+}
+void publich_message_data(const char* topic) {
     StaticJsonDocument<256> jsonDoc; // light -> fan -> air conditioner // 0 là off, 1 là on 
     jsonDoc["light"] = digitalRead(ledGPIO);
     jsonDoc["fan"] = digitalRead(fanGPIO);
     jsonDoc["air_conditioner"] = digitalRead(airConditioner);
+    int random = generateRandomNumber();
+    
+    jsonDoc["new_sensor"] = random;
     jsonDoc["temperature"] = roundTo(dht.readTemperature(), 2);
     jsonDoc["humidity"] = roundTo(dht.readHumidity(), 2);
 
-    if (isnan(dht.readTemperature()) || isnan(dht.readHumidity()))
-    {
+    if (isnan(dht.readTemperature()) || isnan(dht.readHumidity())) {
         Serial.println("Failed to read from DHT sensor");
         return;
     }
@@ -89,22 +115,20 @@ void publich_message_data(const char* topic)
     int analogValue = analogRead(lightGPIO);
     float voltage = 4095.0 - analogValue;
     jsonDoc["light_level"] = voltage;
-
-    // Lấy thời gian hiện tại
     struct tm timeinfo;
-      if (!getLocalTime(&timeinfo)) {
-          Serial.println("Failed to obtain time");
-          return;
-      }
-      char timeString[64];
-      strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", &timeinfo);
-    // Thêm thời gian vào json
+    if (!getLocalTime(&timeinfo)) {
+        Serial.println("Failed to obtain time");
+        return;
+    }
+    char timeString[64];
+    strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", &timeinfo);
     jsonDoc["time"] = timeString;
 
     char buffer[256];
     serializeJson(jsonDoc, buffer);
     Serial.println(buffer);
     client.publish(topic, buffer);
+    nhapNhayDen(random);
 }
 
 void public_message_status_device(const char* topic, const char* message)
@@ -153,8 +177,6 @@ void call_back(char* topic, byte* payload, unsigned int length)
         digitalWrite(fanGPIO, HIGH);
       else if(incoming_message == "0")
         digitalWrite(fanGPIO, LOW);
-        
-      
     }
 
     if(strcmp(topic,statusAirConditioner) == 0)
@@ -200,20 +222,19 @@ void setup_led()
     pinMode(ledGPIO, OUTPUT);
     pinMode(fanGPIO, OUTPUT);
     pinMode(airConditioner, OUTPUT);
+    pinMode(hiepGPIO, OUTPUT);
 }
 void setup() {
     set_up_wifi();
     setup_led();
-    // espClient.setInsecure();
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(call_back);
-    // timeClient.begin();
-    // timeClient.setTimeOffset(25200);
 }
 
 int lastLedState = LOW;
 int lastFanState = LOW;
 int lastAirState = LOW;
+
 
 void public_change_status() {
   int currentLedState = digitalRead(ledGPIO);  
@@ -231,16 +252,15 @@ void public_change_status() {
       lastAirState = currentAirState;  
       public_message_status_device("air_status", currentAirState == HIGH ? "1" : "0");
   }
+
   if (currentLedState != lastLedState || currentFanState != lastFanState || currentAirState != lastAirState) {
     lastLedState = currentLedState; 
       lastFanState = currentFanState;  
       lastAirState = currentAirState; 
-    if(currentLedState == HIGH && currentFanState == HIGH && currentAirState == HIGH) {
-      
+    if(currentLedState == HIGH && currentFanState == HIGH && currentAirState == HIGH) {  
       public_message_status_device("all_status", "all : 1");
     }
-    else if(currentLedState == LOW && currentFanState == LOW && currentAirState == LOW) {
-      
+    else if(currentLedState == LOW && currentFanState == LOW && currentAirState == LOW) {     
       public_message_status_device("all_status", "all : 0");
     }
   }
@@ -251,25 +271,14 @@ void loop() {
     if(!client.connected())
     {
       connect_mqtt_broker();
-
     }
     client.loop();
-
     public_change_status();
     
- 
    unsigned long currentMillis = millis();
    if(currentMillis - lastSend >= sendInterval)
    {
      lastSend = currentMillis;
      publich_message_data(sensorData);
-
-    //  float temperature = dht.readTemperature();
-
-    //  char sensorData2[10];
-    //  dtostrf(temperature, 4, 1, sensorData2);  // Chuyển nhiệt độ thành chuỗi, lấy 1 chữ số thập phân
-
-    // // Gọi hàm public_message_status_device với giá trị từ cảm biến
-    //  public_message_status_device("temp", sensorData2);
    }
 }

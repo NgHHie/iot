@@ -13,6 +13,7 @@ export default (sequelize) => {
       NhietDo: DataTypes.FLOAT,
       DoAm: DataTypes.FLOAT,
       AnhSang: DataTypes.FLOAT,
+      NewCamBien: DataTypes.INTEGER,
       ThoiGian: DataTypes.DATE,
     },
     {

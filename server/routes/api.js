@@ -9,5 +9,6 @@ router.get("/action_history", ThietBi.getThietBi);
 router.post("/remote", ThietBi.postThietBi);
 router.get("/data_sensor", CamBien.getCamBien);
 router.get("/dashboard", DashBoard.getDashBoard);
+router.get("/count", CamBien.getCountHiep);
 
 export default router;

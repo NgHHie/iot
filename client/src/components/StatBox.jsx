@@ -159,6 +159,9 @@ const StatBox = ({ title, value, description, onChange }) => {
           res.alert = true;
           return res;
         }
+      case "hiep":
+        res.increase = "Cảm biến mới";
+        return res;
       default:
         return "";
     }

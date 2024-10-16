@@ -1,5 +1,5 @@
 import mqtt, { connect } from "mqtt";
-import { postDataCamBien } from "../services/cambien.services.js";
+import { postDataCamBien, updateCount } from "../services/cambien.services.js";
 import { postDataThietBi } from "../services/thietbi.services.js";
 
 const numOfSensor = 3;
@@ -23,6 +23,7 @@ export const initMqtt = async (io) => {
     "light_status",
     "fan_status",
     "air_status",
+    "hiep_status",
     "home/light",
     "home/fan",
     "home/air_conditioner",
@@ -44,14 +45,17 @@ export const initMqtt = async (io) => {
     if (
       topic == "light_status" ||
       topic == "fan_status" ||
-      topic == "air_status"
+      topic == "air_status" ||
+      topic == "hiep_status"
     ) {
       const payloadjson = JSON.parse(payload.toString());
+      // console.log(topic);
       // console.log(payloadjson);
       let tenthietbi = "";
       if (topic == "light_status") tenthietbi = "den";
       else if (topic == "fan_status") tenthietbi = "quat";
       else if (topic == "air_status") tenthietbi = "dieuhoa";
+      else if (topic == "hiep_status") tenthietbi = "ledcanhbao";
       let data = {
         TenThietBi: tenthietbi,
         TrangThai: payloadjson.status,
@@ -62,11 +66,14 @@ export const initMqtt = async (io) => {
       postDataThietBi(data);
     } else if (topic == "home/sensor") {
       const payloadjson = JSON.parse(payload.toString());
+      // console.log(payloadjson.new_sensor);
+      if (payloadjson.new_sensor >= 60) updateCount();
       const time = new Date(payloadjson.time);
       time.setHours(time.getHours() + 7);
       // console.log(payloadjson);
       // let data = [];
       let data = {
+        NewCamBien: parseInt(payloadjson.new_sensor),
         NhietDo: parseFloat(payloadjson.temperature),
         DoAm: parseFloat(payloadjson.humidity),
         AnhSang: parseFloat(payloadjson.light_level),

@@ -26,7 +26,7 @@ const DataGridCustomToolbar = ({
   selectedColumn,
   setSelectedColumn,
 }) => {
-  console.log(columns);
+  // console.log(columns);
   return (
     <GridToolbarContainer>
       <FlexBetween width="100%">
